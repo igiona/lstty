@@ -1,9 +1,9 @@
 [package]
 name = "lstty"
 description = "A simple terminal tool to list serial ports"
-authors = ["atctwo"]
-version = "0.1.0"
-edition = "2021"
+authors = ["atctwo", "igiona"]
+version = "0.2.0"
+edition = "2024"
 readme = "readme.md"
 repository = "https://github.com/atctwo/lstty"
 license = "MIT"
@@ -14,7 +14,7 @@ categories = ["command-line-utilities"]
 name = "lstty"
 
 [dependencies]
-log = "0.4.20"
+log = "0.4.29"
 logging = "0.1.0"
 pretty_env_logger = "0.5.0"
-serialport = "4.2.2"
+serialport = "4.8.1"
