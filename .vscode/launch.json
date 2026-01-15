@@ -1,0 +1,16 @@
+{
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "run lstty",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/target/debug/lstty",
+            "args": [],
+            "sourceMap": {},
+            "sourceLanguages": [
+                "rust"
+            ]
+        }
+    ]
+}
