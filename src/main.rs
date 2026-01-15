@@ -1,58 +1,104 @@
-use serialport::available_ports;
-use pretty_env_logger;
-#[macro_use] extern crate log;
+use clap::Parser;
+use clap_num::maybe_hex;
+use serialport::{SerialPortType, available_ports};
+#[macro_use]
+extern crate log;
+
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Cli {
+    /// Filter ports that match the specified USB product name
+    #[arg(short, long)]
+    name: Option<String>,
+    /// Filter ports that match the specified USB PID
+    #[arg(short, long, value_parser=maybe_hex::<u16>)]
+    pid: Option<u16>,
+    /// Filter ports that match the specified USB VID
+    #[arg(short, long, value_parser=maybe_hex::<u16>)]
+    vid: Option<u16>,
+    /// Prints only the port names
+    #[arg(short, long, default_value_t = false)]
+    only_port_name: bool,
+}
 
 fn main() {
-
     // initialise logging
     pretty_env_logger::init();
     info!("lstty - list serial ports");
 
+    let cli = Cli::parse();
+
     // print serial ports
     match available_ports() {
-
         Ok(ports) => {
-
             info!("{} serial ports found:", ports.len());
-            for port in ports {
 
+            let ports = ports.iter().filter(|p| {
+                cli.name.as_ref().is_none_or(|cli_name| {
+                    // Filter by product name
+                    matches!(
+                        &p.port_type,
+                        SerialPortType::UsbPort(info) if info.product
+                            .as_ref()
+                            .is_some_and(|product_name| product_name == cli_name)
+                    )
+                }) && cli.pid.as_ref().is_none_or(|cli_pid| {
+                    // Filter by PID
+                    matches!(
+                        &p.port_type,
+                        SerialPortType::UsbPort(info) if info.pid == *cli_pid
+                    )
+                }) && cli.vid.as_ref().is_none_or(|cli_vid| {
+                    // Filter by VID
+                    matches!(
+                        &p.port_type,
+                        SerialPortType::UsbPort(info) if info.vid == *cli_vid
+                    )
+                })
+            });
+
+            for port in ports {
                 // determine port details string
                 let mut details = String::new();
 
                 // add port type
-                details.push_str(format!("{:9}", match port.port_type {
-                    serialport::SerialPortType::BluetoothPort => "bluetooth",
-                    serialport::SerialPortType::PciPort       => "pci",
-                    serialport::SerialPortType::UsbPort(_)    => "usb",
-                    serialport::SerialPortType::Unknown       => "unknown",
-                }).as_str());
+                details.push_str(
+                    format!(
+                        "{:9}",
+                        match port.port_type {
+                            SerialPortType::BluetoothPort => "bluetooth",
+                            SerialPortType::PciPort => "pci",
+                            SerialPortType::UsbPort(_) => "usb",
+                            SerialPortType::Unknown => "unknown",
+                        }
+                    )
+                    .as_str(),
+                );
 
                 // if the port is a usb device, add extra info
-                match port.port_type {
-                    serialport::SerialPortType::UsbPort(info) => {
-                        details.push_str(
-                            format!("{:04x}:{:04x} {}", 
-                                info.vid, info.pid, 
-                                match info.product {
-                                    Some(name) => name.to_string(),
-                                    None => "".to_string(),
-                                }
-                        ).as_str());
-                    }
-
-                    // ignore if not a usb device
-                    _ => {}
+                if let SerialPortType::UsbPort(info) = &port.port_type {
+                    details.push_str(
+                        format!(
+                            "{:04x}:{:04x} {}",
+                            info.vid,
+                            info.pid,
+                            info.product.as_ref().unwrap_or(&String::new())
+                        )
+                        .as_str(),
+                    );
                 }
 
                 // print port details
-                println!("{:14} {}",  port.port_name, details);
+                if cli.only_port_name {
+                    println!("{}", port.port_name);
+                } else {
+                    println!("{:14} {}", port.port_name, details);
+                }
             }
-
         }
 
         Err(e) => {
             error!("Failed to retrieve serial ports: {e}");
         }
-
     }
 }
