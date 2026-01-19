@@ -1,6 +1,8 @@
 use clap::Parser;
 use clap_num::maybe_hex;
+use regex::Regex;
 use serialport::{SerialPortType, available_ports};
+
 #[macro_use]
 extern crate log;
 
@@ -27,6 +29,7 @@ fn main() {
     info!("lstty - list serial ports");
 
     let cli = Cli::parse();
+    let cli_name_regex: Option<Regex> = cli.name.map(|name| Regex::new(&name).unwrap());
 
     // print serial ports
     match available_ports() {
@@ -34,13 +37,13 @@ fn main() {
             info!("{} serial ports found:", ports.len());
 
             let ports = ports.iter().filter(|p| {
-                cli.name.as_ref().is_none_or(|cli_name| {
+                cli_name_regex.as_ref().is_none_or(|cli_name_regex| {
                     // Filter by product name
                     matches!(
                         &p.port_type,
                         SerialPortType::UsbPort(info) if info.product
                             .as_ref()
-                            .is_some_and(|product_name| product_name == cli_name)
+                            .is_some_and(|product_name| cli_name_regex.is_match(product_name))
                     )
                 }) && cli.pid.as_ref().is_none_or(|cli_pid| {
                     // Filter by PID
