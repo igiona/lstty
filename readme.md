@@ -2,7 +2,7 @@
 
 <a href="https://crates.io/crates/lstty"><img src=https://img.shields.io/crates/v/lstty></img></a>
 
-This is a simple terminal tool to list what serial ports there are.  It prints the name of the serial port, what type of port it is, and if it's a USB port it will print the VID and PID and product name.  At the minute that's all it does.  There aren't any command line parameters.  It's just `lstty`.
+This is a simple terminal tool to list what serial ports there are.  It prints the name of the serial port, what type of port it is, and if it's a USB port it will print the VID and PID and product name.  It also supports some filtering features.  At the minute that's all it does.  It's just `lstty`!
 
 An example of this program's output:
 ```text
@@ -15,7 +15,7 @@ $ lstty
 
 ## Filtering
 
-This program allows to filter USB serial devices by product-name like:
+This program allows to filter USB serial devices by product-name (optionally with a [regular expression](https://docs.rs/regex/latest/regex/#syntax)) like:
 
 ```bash
 $ lstty -n "STM32 Virtual ComPort"
