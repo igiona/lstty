@@ -9,7 +9,7 @@ extern crate log;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Cli {
-    /// Filter ports that match the specified USB product name
+    /// Filter ports that match the specified USB product name (regular expression)
     #[arg(short, long)]
     name: Option<String>,
     /// Filter ports that match the specified USB PID
